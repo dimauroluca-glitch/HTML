@@ -2,6 +2,17 @@ let tot_entrate = 0;
 let tot_uscite = 0;
 let tot_tot = 0;
 let transazioni = [];
+async function caricaDatiDalServer() {
+    try {
+        const response = await fetch('/dati');
+        if (response.ok) {
+            transazioni = await response.json();
+            aggiorna();
+        }
+    } catch (errore) {
+        console.error("Errore nel recupero dei dati:", errore);
+    }
+}
 function aggiorna(){
     tot_entrate = 0;
     tot_uscite = 0;
@@ -12,7 +23,8 @@ function aggiorna(){
             tot_uscite += transazione.importo;
         }
     }
-    tot_tot = tot_entrate - tot_uscite;
+    tot_tot = tot_entrate - uscite;
+    tot_tot = tot_entrate - tot_uscite; 
     document.getElementById('entrate').textContent = tot_entrate.toFixed(2) + ' €';
     document.getElementById('uscite').textContent = tot_uscite.toFixed(2) + ' €';
     document.getElementById('tot').textContent = tot_tot.toFixed(2) + ' €';
@@ -53,7 +65,7 @@ function aggiorna(){
         tbody.appendChild(row);
     }
 }
-function aggiungi(tipo, importo, descrizione, categoria, data){
+async function aggiungi(tipo, importo, descrizione, categoria, data){
     const transazione = {
         tipo: tipo,
         importo: parseFloat(importo),
@@ -61,8 +73,22 @@ function aggiungi(tipo, importo, descrizione, categoria, data){
         categoria: categoria,
         data: data
     };
-    transazioni.push(transazione);
-    aggiorna();
+    try {
+        const response = await fetch('/salva', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(transazione)
+        });
+        if (response.ok) {
+            transazioni.push(transazione);
+            aggiorna();
+        } else {
+            alert("Errore durante il salvataggio sul server cloud");
+        }
+    } catch (errore) {
+        console.error("Errore di rete:", errore);
+        alert("Impossibile connettersi al server");
+    }
 }
 document.getElementById('bottone').addEventListener('click', function(e){
     e.preventDefault();
@@ -89,4 +115,4 @@ document.getElementById('cancella-cronologia').addEventListener('click', functio
         transazioni = [];
         aggiorna();
 });
-aggiorna();
+caricaDatiDalServer();
