@@ -92,6 +92,22 @@ async function aggiungi(tipo, importo, descrizione, categoria, data){
         alert("Impossibile connettersi al server");
     }
 }
+async function svuotaServer() {
+    try {
+        const response = await fetch('/cancella', { 
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            transazioni = [];
+            aggiorna();
+        } else {
+            alert("Errore durante la cancellazione sul server");
+        }
+    } catch (errore) {
+        console.error("Errore di rete durante la cancellazione:", errore);
+        alert("Impossibile connettersi al server per cancellare");
+    }
+}
 document.getElementById('bottone').addEventListener('click', function(e){
     e.preventDefault();
     const tipo = document.getElementById('tipo').value;
@@ -113,8 +129,9 @@ document.getElementById('bottone').addEventListener('click', function(e){
 document.getElementById('filtro-tipo').addEventListener('change', function(){
     aggiorna();
 });
-document.getElementById('cancella-cronologia').addEventListener('click', function(){
-        transazioni = [];
-        aggiorna();
+document.getElementById('cancella-cronologia').addEventListener('click', async function(){
+    if(confirm("Sei sicuro di voler cancellare tutta la cronologia dal server cloud?")) {
+        await svuotaServer();
+    }
 });
 caricaDatiDalServer();
