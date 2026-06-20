@@ -17,20 +17,22 @@ function aggiorna(){
     tot_entrate = 0;
     tot_uscite = 0;
     for(let transazione of transazioni){
-        if(transazione.tipo === 'entrata'){
-            tot_entrate += transazione.importo;
-        }else{
-            tot_uscite += transazione.importo;
+        const importoNum = parseFloat(transazione.importo);
+        if(!isNaN(importoNum)) {
+            if(transazione.tipo === 'entrata'){
+                tot_entrate += importoNum;
+            } else {
+                tot_uscite += importoNum;
+            }
         }
     }
-    tot_tot = tot_entrate - uscite;
     tot_tot = tot_entrate - tot_uscite; 
     document.getElementById('entrate').textContent = tot_entrate.toFixed(2) + ' €';
     document.getElementById('uscite').textContent = tot_uscite.toFixed(2) + ' €';
     document.getElementById('tot').textContent = tot_tot.toFixed(2) + ' €';
     if(tot_tot >= 0){
         document.getElementById('tot').style.color = 'green';
-    }else{
+    } else {
         document.getElementById('tot').style.color = 'red';
     }
     const filtro = document.getElementById('filtro-tipo').value;
@@ -38,28 +40,29 @@ function aggiorna(){
     tbody.innerHTML = '';
     for(let transazione of transazioni){
         if(filtro === 'tutte'){
-        }else if(filtro === 'entrata' && transazione.tipo !== 'entrata'){
+        } else if(filtro === 'entrata' && transazione.tipo !== 'entrata'){
             continue;
-        }else if(filtro === 'uscita' && transazione.tipo !== 'uscita'){
+        } else if(filtro === 'uscita' && transazione.tipo !== 'uscita'){
             continue;
         }
         const row = document.createElement('tr');
         const cellData = document.createElement('td');
-        cellData.textContent = transazione.data;
+        cellData.textContent = transazione.data || '';
         row.appendChild(cellData);
         const cellTipo = document.createElement('td');
-        cellTipo.textContent = transazione.tipo;
+        cellTipo.textContent = transazione.tipo || '';
         const classeTipo = transazione.tipo === 'entrata' ? 'tipo-entrata' : 'tipo-uscita';
         cellTipo.className = classeTipo;
         row.appendChild(cellTipo);
         const cellDescrizione = document.createElement('td');
-        cellDescrizione.textContent = transazione.descrizione;
+        cellDescrizione.textContent = transazione.descrizione || '';
         row.appendChild(cellDescrizione);
         const cellCategoria = document.createElement('td');
-        cellCategoria.textContent = transazione.categoria;
+        cellCategoria.textContent = transazione.categoria || '';
         row.appendChild(cellCategoria);
         const cellImporto = document.createElement('td');
-        cellImporto.textContent = transazione.importo.toFixed(2) + ' €';
+        const imp = parseFloat(transazione.importo) || 0;
+        cellImporto.textContent = imp.toFixed(2) + ' €';
         cellImporto.style.color = transazione.tipo === 'entrata' ? 'green' : 'red';
         row.appendChild(cellImporto);
         tbody.appendChild(row);
@@ -80,8 +83,7 @@ async function aggiungi(tipo, importo, descrizione, categoria, data){
             body: JSON.stringify(transazione)
         });
         if (response.ok) {
-            transazioni.push(transazione);
-            aggiorna();
+            await caricaDatiDalServer(); 
         } else {
             alert("Errore durante il salvataggio sul server cloud");
         }
