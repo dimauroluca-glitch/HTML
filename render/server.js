@@ -1,16 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const mongoose = require('mongoose'); // Importiamo mongoose
+const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// INCOLLA QUI LA TUA STRINGA DI MONGODB ATLAS
-// Ricordati di sostituire <username> e <password> con i tuoi dati reali!
 const MONGO_URI = "mongodb+srv://lucadimauro2009_db_user:r1IHOxgQuvOSs3MK@cluster0.h45ktfd.mongodb.net/?appName=Cluster0";
 mongoose.connect(MONGO_URI)
     .then(() => console.log("Connesso con successo a MongoDB Atlas!"))
@@ -32,6 +28,15 @@ app.get('/dati', async (req, res) => {
         res.json(datiSalvati);
     } catch (err) {
         res.status(500).json({ message: "Errore nel recupero dei dati" });
+    }
+});
+app.delete('/cancella', async (req, res) => {
+    try {
+        await Dato.deleteMany({});
+        res.json({ message: "Tutta la cronologia è stata cancellata da MongoDB!" });
+    } catch (err) {
+        console.error("Errore durante la cancellazione:", err);
+        res.status(500).json({ message: "Errore nella cancellazione dei dati dal database" });
     }
 });
 app.get('/', (req, res) => {
