@@ -1,18 +1,38 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose'); // Importiamo mongoose
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-let databaseTemporaneo = [];
-app.post('/salva', (req, res) => {
-    databaseTemporaneo.push(req.body);
-    res.json({ message: "Dati salvati con successo!" });
+
+// INCOLLA QUI LA TUA STRINGA DI MONGODB ATLAS
+// Ricordati di sostituire <username> e <password> con i tuoi dati reali!
+const MONGO_URI = "mongodb+srv://lucadimauro2009_db_user:r1IHOxgQuvOSs3MK@cluster0.h45ktfd.mongodb.net/?appName=Cluster0";
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("Connesso con successo a MongoDB Atlas!"))
+    .catch(err => console.error("Errore di connessione al database:", err));
+const DatoSchema = new mongoose.Schema({}, { strict: false });
+const Dato = mongoose.model('Dato', DatoSchema);
+app.post('/salva', async (req, res) => {
+    try {
+        const nuovoDato = new Dato(req.body);
+        await nuovoDato.save();
+        res.json({ message: "Dati salvati su MongoDB con successo!" });
+    } catch (err) {
+        res.status(500).json({ message: "Errore nel salvataggio dei dati" });
+    }
 });
-app.get('/dati', (req, res) => {
-    res.json(databaseTemporaneo);
+app.get('/dati', async (req, res) => {
+    try {
+        const datiSalvati = await Dato.find();
+        res.json(datiSalvati);
+    } catch (err) {
+        res.status(500).json({ message: "Errore nel recupero dei dati" });
+    }
 });
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
