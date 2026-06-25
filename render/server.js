@@ -11,20 +11,31 @@ const MONGO_URI = "mongodb+srv://lucadimauro2009_db_user:r1IHOxgQuvOSs3MK@cluste
 mongoose.connect(MONGO_URI)
     .then(() => console.log("Connesso con successo a MongoDB Atlas!"))
     .catch(err => console.error("Errore di connessione al database:", err));
-const DatoSchema = new mongoose.Schema({}, { strict: false });
+const DatoSchema = new mongoose.Schema({
+    userId: { type: String, required: true }
+}, { strict: false });
 const Dato = mongoose.model('Dato', DatoSchema);
 app.post('/salva', async (req, res) => {
     try {
-        const nuovoDato = new Dato(req.body);
-        await nuovoDato.save();
-        res.json({ message: "Dati salvati su MongoDB con successo!" });
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            return res.status(400).json({ message: "ID Utente anonimo mancante negli headers." });
+        }
+        const datiConUtente = { ...req.body, userId: userId };
+        const nuovoDato = new Dato(datiConUtente);
+        await nuovoDato.save(); 
+        res.json({ message: "Dati salvati con successo per il tuo ID anonimo!" });
     } catch (err) {
         res.status(500).json({ message: "Errore nel salvataggio dei dati" });
     }
 });
 app.get('/dati', async (req, res) => {
     try {
-        const datiSalvati = await Dato.find();
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            return res.status(400).json({ message: "ID Utente anonimo mancante negli headers." });
+        }
+        const datiSalvati = await Dato.find({ userId: userId });
         res.json(datiSalvati);
     } catch (err) {
         res.status(500).json({ message: "Errore nel recupero dei dati" });
@@ -32,11 +43,14 @@ app.get('/dati', async (req, res) => {
 });
 app.delete('/cancella', async (req, res) => {
     try {
-        await Dato.deleteMany({});
-        res.json({ message: "Tutta la cronologia è stata cancellata da MongoDB!" });
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            return res.status(400).json({ message: "ID Utente anonimo mancante negli headers." });
+        }
+        await Dato.deleteMany({ userId: userId });
+        res.json({ message: "La tua cronologia anonima è stata cancellata dal cloud!" });
     } catch (err) {
-        console.error("Errore durante la cancellazione:", err);
-        res.status(500).json({ message: "Errore nella cancellazione dei dati dal database" });
+        res.status(500).json({ message: "Errore nella cancellazione dei dati" });
     }
 });
 app.get('/', (req, res) => {
