@@ -1,3 +1,8 @@
+const ASSETS_TO_CACHE = [
+  '/',
+  'index.html',
+  'budget_tracker.js'
+];
 const CACHE_NAME = 'v1_sito_offline';
 const ASSETS_TO_CACHE = [
   '/',
